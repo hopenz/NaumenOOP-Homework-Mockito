@@ -35,14 +35,16 @@ public class ShoppingServiceTest {
     }
 
     /**
-     * Не вижу смысла это тестировать тут, так как в этом методе вызывается другой метод другого класса
+     * Не вижу смысла это тестировать тут, так как в этом методе возвращается результат другого метода getAll() класса
+     * ProductDao, где в свою очередь идет взаимодействие с БД
      */
     @Test
     public void getAllProductsTest() {
     }
 
     /**
-     * Не вижу смысла это тестировать тут, так как в этом методе вызывается другой метод другого класса
+     * Не вижу смысла это тестировать тут, так как в этом методе возвращается результат другого метода getByName()
+     * класса ProductDao, где в свою очередь идет взаимодействие с БД
      */
     @Test
     public void getProductByNameTest() {
@@ -60,7 +62,7 @@ public class ShoppingServiceTest {
         Product firstProduct = new Product("Энергетик", 5);
         Product secondProduct = new Product("Булочка", 3);
 
-        Cart cart = new Cart(new Customer(1L, "112233"));
+        Cart cart = shoppingService.getCart(new Customer(1L, "112233"));
         cart.add(firstProduct, 2);
         cart.add(secondProduct, 1);
 
@@ -81,7 +83,7 @@ public class ShoppingServiceTest {
      */
     @Test
     public void buyWithEmptyCartTest() throws BuyException {
-        Cart cart = new Cart(new Customer(1L, "112233"));
+        Cart cart = shoppingService.getCart(new Customer(1L, "112233"));
         Assertions.assertEquals(0, cart.getProducts().size());
         Assertions.assertFalse(shoppingService.buy(cart));
     }
@@ -95,8 +97,8 @@ public class ShoppingServiceTest {
     public void buyWithMissingProductTest() throws BuyException {
         Product firstProduct = new Product("Энергетик", 3);
 
-        Cart firstCart = new Cart(new Customer(1L, "112233"));
-        Cart secondCart = new Cart(new Customer(2L, "445566"));
+        Cart firstCart = shoppingService.getCart(new Customer(1L, "112233"));
+        Cart secondCart = shoppingService.getCart(new Customer(2L, "445566"));
 
         firstCart.add(firstProduct, 2);
         secondCart.add(firstProduct, 2);
@@ -121,10 +123,31 @@ public class ShoppingServiceTest {
     public void buyAllProductsTest() throws BuyException {
         Product firstProduct = new Product("Энергетик", 5);
 
-        Cart cart = new Cart(new Customer(1L, "112233"));
+        Cart cart = shoppingService.getCart(new Customer(1L, "112233"));
         cart.add(firstProduct, 5);
 
         Assertions.assertTrue(shoppingService.buy(cart));
         Assertions.assertEquals(0, firstProduct.getCount());
+    }
+
+    /**
+     * Тестирования случая с отрицательным количеством
+     * Тест валится, так как нет проверки на валидность значений
+     *
+     * @throws BuyException ошибка покупки
+     */
+    @Test
+    public void buyWithNegativeCountTest() throws BuyException {
+        Product firstProduct = new Product("Энергетик", 5);
+        Product secondProduct = new Product("Булочка", 3);
+
+        Cart cart = shoppingService.getCart(new Customer(1L, "112233"));
+
+        cart.add(firstProduct, -3);
+        cart.add(secondProduct, 0);
+
+        Assertions.assertFalse(shoppingService.buy(cart));
+        Assertions.assertEquals(5, firstProduct.getCount());
+        Assertions.assertEquals(3, secondProduct.getCount());
     }
 }
